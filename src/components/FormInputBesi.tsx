@@ -122,14 +122,14 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
               <Input id="kodePekerjaan" placeholder="B1, K2, P3..." />
             </Form.Item>
           </Col>
-          <Col span={10}>
-            <Form.Item name="namaPekerjaan" label="Nama Pekerjaan" rules={[{ required: true, message: 'Wajib diisi' }]}>
-              <Input id="namaPekerjaan" placeholder="Balok Utama Lt.1..." />
+          <Col xs={24} sm={16}>
+            <Form.Item name="namaPekerjaan" label="Nama Pekerjaan" rules={[{ required: true }]}>
+              <Input placeholder="Contoh: Kolom Utama Lt.1" />
             </Form.Item>
           </Col>
-          <Col span={6}>
-            <Form.Item name="zona" label="Zona / Lantai">
-              <Input id="zona" placeholder="Lt.1, Zona A..." />
+          <Col xs={24} sm={8}>
+            <Form.Item name="zona" label="Zona/Lantai" rules={[{ required: true }]}>
+              <Input placeholder="Contoh: Lt. 1" />
             </Form.Item>
           </Col>
         </Row>
@@ -153,9 +153,9 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
         <Divider orientation="left" style={{ color: '#64748b', fontSize: 12, borderColor: '#334155' }}>
           SPESIFIKASI BESI
         </Divider>
-        <Row gutter={16}>
-          <Col span={8}>
-            <Form.Item name="diameter" label="Diameter (mm)" rules={[{ required: true }]}>
+        <Row gutter={[16, 0]}>
+          <Col xs={12} sm={10}>
+            <Form.Item name="diameter" label="Diameter" rules={[{ required: true }]}>
               <Select id="diameter" placeholder="Pilih diameter...">
                 {DIAMETER_OPTIONS.map(d => (
                   <Option key={d} value={d}>
@@ -165,8 +165,8 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
               </Select>
             </Form.Item>
           </Col>
-          <Col span={6}>
-            <Form.Item name="typeBesi" label="Type Besi" rules={[{ required: true }]}>
+          <Col xs={12} sm={14}>
+            <Form.Item name="typeBesi" label="Grade" rules={[{ required: true }]}>
               <Select id="typeBesi">
                 {TYPE_BESI_OPTIONS.map(t => <Option key={t} value={t}>{t}</Option>)}
               </Select>
@@ -178,38 +178,38 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
           DIMENSI &amp; KUANTITAS (SHAPE CODE)
         </Divider>
         
-        <Row gutter={16} className="mb-4">
-          <Col span={8}>
+        <Row gutter={[16, 16]} className="mb-4">
+          <Col xs={24} sm={8}>
             <Form.Item name="shapeCode" label="Bentuk Dasar (Shape)" rules={[{ required: true }]} style={{ marginBottom: 0 }}>
               <Select id="shapeCode">
                 {SHAPE_CODE_OPTIONS.map(s => <Option key={s} value={s}>{s}</Option>)}
               </Select>
             </Form.Item>
           </Col>
-          <Col span={16}>
-            <div className="p-3 rounded-lg border border-slate-700 bg-slate-800/50">
-              <Row gutter={8}>
-                <Col span={6}>
+          <Col xs={24} sm={16}>
+            <div className="p-3 rounded-lg border border-slate-200 bg-slate-50">
+              <Row gutter={[8, 8]}>
+                <Col xs={12} sm={6}>
                   <Form.Item name={['shapeValues', 'a']} label="A (m)" tooltip="Panjang Sisi A" style={{ marginBottom: 0 }}>
                     <InputNumber className="w-full" step={0.1} min={0} placeholder="0.00" precision={2} />
                   </Form.Item>
                 </Col>
                 {['L', 'U', 'Sengkang'].includes(currentShape) && (
-                  <Col span={6}>
+                  <Col xs={12} sm={6}>
                     <Form.Item name={['shapeValues', 'b']} label="B (m)" tooltip="Panjang Sisi B" style={{ marginBottom: 0 }}>
                       <InputNumber className="w-full" step={0.1} min={0} placeholder="0.00" precision={2} />
                     </Form.Item>
                   </Col>
                 )}
                 {['U'].includes(currentShape) && (
-                  <Col span={6}>
+                  <Col xs={12} sm={6}>
                     <Form.Item name={['shapeValues', 'c']} label="C (m)" tooltip="Panjang Sisi C" style={{ marginBottom: 0 }}>
                       <InputNumber className="w-full" step={0.1} min={0} placeholder="0.00" precision={2} />
                     </Form.Item>
                   </Col>
                 )}
                 {['Sengkang'].includes(currentShape) && (
-                  <Col span={6}>
+                  <Col xs={12} sm={6}>
                     <Form.Item name={['shapeValues', 'd']} label="Kait (m)" tooltip="Panjang total kait (Contoh: 0.15)" style={{ marginBottom: 0 }}>
                       <InputNumber className="w-full" step={0.01} min={0} placeholder="0.00" precision={2} />
                     </Form.Item>
@@ -220,8 +220,8 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
           </Col>
         </Row>
 
-        <Row gutter={16}>
-          <Col span={8}>
+        <Row gutter={[16, 0]}>
+          <Col xs={24} sm={8}>
             <Form.Item
               name="panjangPotongan"
               label="P. Potongan (Manual)"
@@ -238,19 +238,19 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
               />
             </Form.Item>
           </Col>
-          <Col span={8}>
+          <Col xs={12} sm={8}>
             <Form.Item
               name="jumlahPotongan"
-              label="Jumlah Potongan / Elemen"
+              label="Jml. Potong"
               rules={[{ required: true, type: 'number', min: 1 }]}
             >
               <InputNumber id="jumlahPotongan" className="w-full" placeholder="1" min={1} precision={0} />
             </Form.Item>
           </Col>
-          <Col span={8}>
+          <Col xs={12} sm={8}>
             <Form.Item
               name="jumlahElemen"
-              label="Jumlah Elemen"
+              label="Jml. Elemen"
               rules={[{ required: true, type: 'number', min: 1 }]}
             >
               <InputNumber id="jumlahElemen" className="w-full" placeholder="1" min={1} precision={0} />
@@ -261,18 +261,18 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
         {/* Live Preview */}
         {(preview.totalPanjang > 0) && (
           <div className="glass-card p-4 mb-4 animate-fade-in-up">
-            <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-3">Preview Hasil Perhitungan</p>
+            <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-3">Preview Hasil Perhitungan</p>
             <div className="grid grid-cols-3 gap-4">
               <div className="text-center">
-                <p className="text-2xl font-bold text-blue-400">{preview.totalPanjang.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-sky-600">{preview.totalPanjang.toFixed(2)}</p>
                 <p className="text-xs text-slate-500 mt-1">Total Panjang (m)</p>
               </div>
-              <div className="text-center border-x border-slate-700">
-                <p className="text-2xl font-bold text-orange-400">{preview.totalBerat.toFixed(2)}</p>
+              <div className="text-center border-x border-slate-200">
+                <p className="text-2xl font-bold text-emerald-600">{preview.totalBerat.toFixed(2)}</p>
                 <p className="text-xs text-slate-500 mt-1">Total Berat (kg)</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-green-400">{preview.jumlahBatang}</p>
+                <p className="text-2xl font-bold text-indigo-600">{preview.jumlahBatang}</p>
                 <p className="text-xs text-slate-500 mt-1">Jumlah Batang (@12m)</p>
               </div>
             </div>

@@ -39,7 +39,7 @@ export const TabCuttingList: React.FC<Props> = ({ items }) => {
       />
 
       {/* Summary Metrik */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="glass-card p-4 flex items-center gap-4 border-l-4 border-indigo-500">
           <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xl">
             <NumberOutlined />
@@ -130,14 +130,14 @@ export const TabCuttingList: React.FC<Props> = ({ items }) => {
             <Panel
               key={index.toString()}
               header={
-                <div className="flex items-center justify-between w-full">
+                <div className="flex flex-col md:flex-row md:items-center justify-between w-full gap-2 md:gap-0">
                   <div className="flex items-center gap-3">
                     <Tag color="orange" className="font-mono text-sm border-0 font-bold px-3 py-1">D{result.diameter}</Tag>
                     <span className="font-semibold text-slate-800">
                       Butuh {result.totalBatang} Batang
                     </span>
                   </div>
-                  <div className="flex items-center gap-4 text-xs font-medium mr-4">
+                  <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs font-medium md:mr-4">
                     <span className="text-slate-500">Panjang Dipotong: <b className="text-blue-600">{formatNumber(result.totalPanjangDipotong, 2)}m</b></span>
                     <span className="text-slate-500">Waste: <b className="text-red-500">{formatNumber(result.wasteMeter, 2)}m</b></span>
                     <Tag color={result.wastePercentage > 15 ? 'red' : result.wastePercentage > 5 ? 'warning' : 'success'} className="border-0 font-bold ml-2">
@@ -155,6 +155,7 @@ export const TabCuttingList: React.FC<Props> = ({ items }) => {
                 rowKey="barIndex"
                 pagination={false}
                 size="small"
+                scroll={{ x: 'max-content' }}
                 className="cutting-list-table"
               />
             </Panel>

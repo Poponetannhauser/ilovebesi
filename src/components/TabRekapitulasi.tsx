@@ -111,7 +111,7 @@ export const TabRekapitulasi: React.FC<Props> = ({ items }) => {
 			align: "right",
 			sorter: (a, b) => a.totalBerat - b.totalBerat,
 			render: (val: number) => (
-				<span className="font-mono font-semibold text-green-400">
+				<span className="font-mono font-semibold text-emerald-600">
 					{formatNumber(val, 2)}
 				</span>
 			),
@@ -122,7 +122,7 @@ export const TabRekapitulasi: React.FC<Props> = ({ items }) => {
 			key: "totalBeratTon",
 			align: "right",
 			render: (val: number) => (
-				<span className="font-mono font-bold text-green-300">
+				<span className="font-mono font-bold text-emerald-500">
 					{val.toFixed(3)}
 				</span>
 			),
@@ -165,7 +165,7 @@ export const TabRekapitulasi: React.FC<Props> = ({ items }) => {
 			key: "totalBerat",
 			align: "right",
 			render: (val: number) => (
-				<span className="font-mono font-semibold text-green-400">
+				<span className="font-mono font-semibold text-emerald-600">
 					{formatNumber(val, 2)}
 				</span>
 			),
@@ -176,7 +176,7 @@ export const TabRekapitulasi: React.FC<Props> = ({ items }) => {
 			key: "totalBeratTon",
 			align: "right",
 			render: (val: number) => (
-				<span className="font-mono font-bold text-green-300">
+				<span className="font-mono font-bold text-emerald-500">
 					{val.toFixed(3)}
 				</span>
 			),
@@ -225,19 +225,19 @@ export const TabRekapitulasi: React.FC<Props> = ({ items }) => {
 					{
 						label: "Total Panjang",
 						value: formatNumber(totalPanjang, 2),
-						color: "text-blue-300",
+						color: "text-sky-600",
 						unit: "m",
 					},
 					{
 						label: "Total Berat",
 						value: formatNumber(totalBerat, 2),
-						color: "text-green-400",
+						color: "text-emerald-600",
 						unit: "kg",
 					},
 					{
 						label: "Total Berat",
 						value: (totalBerat / 1000).toFixed(3),
-						color: "text-green-300",
+						color: "text-emerald-500",
 						unit: "ton",
 					},
 				].map((card, i) => (
@@ -258,8 +258,8 @@ export const TabRekapitulasi: React.FC<Props> = ({ items }) => {
 			</div>
 
 			{/* Rekap per Diameter */}
-			<div className="glass-card p-4">
-				<h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-3 flex items-center gap-2">
+			<div className="glass-card p-4 overflow-hidden">
+				<h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-2">
 					<span className="w-1 h-4 bg-orange-400 rounded-full inline-block" />
 					Rekap per Diameter
 				</h3>
@@ -269,6 +269,7 @@ export const TabRekapitulasi: React.FC<Props> = ({ items }) => {
 					rowKey="diameter"
 					size="small"
 					pagination={false}
+					scroll={{ x: 'max-content' }}
 					summary={() => (
 						<Table.Summary>
 							<Table.Summary.Row>
@@ -277,17 +278,17 @@ export const TabRekapitulasi: React.FC<Props> = ({ items }) => {
 								</Table.Summary.Cell>
 								<Table.Summary.Cell index={1} />
 								<Table.Summary.Cell index={2} align="right">
-									<span className="font-mono font-bold text-blue-300">
+									<span className="font-mono font-bold text-sky-600">
 										{formatNumber(totalPanjang, 2)}
 									</span>
 								</Table.Summary.Cell>
 								<Table.Summary.Cell index={3} align="right">
-									<span className="font-mono font-bold text-green-400">
+									<span className="font-mono font-bold text-emerald-600">
 										{formatNumber(totalBerat, 2)}
 									</span>
 								</Table.Summary.Cell>
 								<Table.Summary.Cell index={4} align="right">
-									<span className="font-mono font-bold text-green-300">
+									<span className="font-mono font-bold text-emerald-500">
 										{(totalBerat / 1000).toFixed(3)}
 									</span>
 								</Table.Summary.Cell>
@@ -303,9 +304,9 @@ export const TabRekapitulasi: React.FC<Props> = ({ items }) => {
 			</div>
 
 			{/* Rekap per Pekerjaan */}
-			<div className="glass-card p-4">
-				<h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-3 flex items-center gap-2">
-					<span className="w-1 h-4 bg-blue-400 rounded-full inline-block" />
+			<div className="glass-card p-4 overflow-hidden">
+				<h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+					<span className="w-1 h-4 bg-sky-500 rounded-full inline-block" />
 					Rekap per Jenis Pekerjaan
 				</h3>
 				<Table
@@ -314,6 +315,7 @@ export const TabRekapitulasi: React.FC<Props> = ({ items }) => {
 					rowKey="typePekerjaan"
 					size="small"
 					pagination={false}
+					scroll={{ x: 'max-content' }}
 					summary={() => (
 						<Table.Summary>
 							<Table.Summary.Row>
@@ -321,17 +323,17 @@ export const TabRekapitulasi: React.FC<Props> = ({ items }) => {
 									<span className="font-bold text-slate-800">TOTAL</span>
 								</Table.Summary.Cell>
 								<Table.Summary.Cell index={1} align="right">
-									<span className="font-mono font-bold text-blue-300">
+									<span className="font-mono font-bold text-sky-600">
 										{formatNumber(totalPanjang, 2)}
 									</span>
 								</Table.Summary.Cell>
 								<Table.Summary.Cell index={2} align="right">
-									<span className="font-mono font-bold text-green-400">
+									<span className="font-mono font-bold text-emerald-600">
 										{formatNumber(totalBerat, 2)}
 									</span>
 								</Table.Summary.Cell>
 								<Table.Summary.Cell index={3} align="right">
-									<span className="font-mono font-bold text-green-300">
+									<span className="font-mono font-bold text-emerald-500">
 										{(totalBerat / 1000).toFixed(3)}
 									</span>
 								</Table.Summary.Cell>

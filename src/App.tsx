@@ -153,7 +153,7 @@ const App: React.FC = () => {
 
       {/* ===== HEADER ===== */}
       <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-slate-200">
-        <div className="max-w-screen-2xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+        <div className="max-w-screen-2xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
           {/* Logo */}
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded bg-sky-700 flex items-center justify-center">
@@ -166,7 +166,7 @@ const App: React.FC = () => {
           </div>
 
           {/* Project Switcher */}
-          <div className="flex-1 max-w-md">
+          <div className="w-full md:flex-1 md:max-w-md order-3 md:order-2">
             {proyekList.length > 0 ? (
               <Dropdown menu={{ items: proyekMenuItems }} trigger={['click']}>
                 <button
@@ -193,7 +193,7 @@ const App: React.FC = () => {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 order-2 md:order-3">
             {activeProyek && (
               <>
                 <Button
@@ -270,7 +270,7 @@ const App: React.FC = () => {
             </div>
 
             {/* Feature highlights */}
-            <div className="grid grid-cols-3 gap-4 max-w-2xl w-full mt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl w-full mt-4">
               {[
                 { icon: <TableOutlined />, title: 'Input Detail', desc: 'Input data besi dengan live preview perhitungan', color: '#0369a1' },
                 { icon: <BarChartOutlined />, title: 'Rekapitulasi', desc: 'Rekap otomatis per diameter & jenis pekerjaan', color: '#0f766e' },
@@ -290,8 +290,8 @@ const App: React.FC = () => {
         {activeProyek && (
           <div>
             {/* Project info bar */}
-            <div className="glass-card mb-4 flex flex-wrap items-center gap-4 justify-between" style={{ borderLeft: '4px solid #0369a1', padding: '12px 16px' }}>
-              <div className="flex flex-wrap gap-4 items-center">
+            <div className="glass-card mb-4 flex flex-col md:flex-row md:items-center gap-4 justify-between" style={{ borderLeft: '4px solid #0369a1', padding: '12px 16px' }}>
+              <div className="flex flex-col md:flex-row gap-4 md:items-center">
                 <div>
                   <h2 className="text-xl font-bold text-slate-800">{activeProyek.namaProyek}</h2>
                   <div className="flex items-center gap-4 mt-1">
@@ -308,7 +308,7 @@ const App: React.FC = () => {
                     </span>
                   </div>
                 </div>
-                <div className="flex gap-2 ml-4 border-l border-slate-200 pl-4 py-1">
+                <div className="flex gap-2 md:ml-4 md:border-l border-slate-200 md:pl-4 py-1">
                   <Tag color="geekblue" style={{ fontSize: 12, padding: '2px 8px' }}>{activeProyek.items.length} Item Form</Tag>
                   <Tag color="success" style={{ fontSize: 12, padding: '2px 8px' }}>
                     {totalBerat >= 1000
