@@ -82,7 +82,7 @@ const App: React.FC = () => {
   };
 
   // ===== BESI HANDLERS =====
-  const handleAddBesi = (values: Omit<ItemBesi, 'id' | 'totalPanjang' | 'beratPerMeter' | 'totalBerat' | 'createdAt' | 'updatedAt'>) => {
+  const handleAddBesi = (values: Omit<ItemBesi, 'id' | 'totalPanjang' | 'beratPerMeter' | 'totalBerat' | 'totalBeratWaste' | 'createdAt' | 'updatedAt'>) => {
     if (!activeProyekId) return;
     if (editingItem) {
       updateItemInProyek(activeProyekId, editingItem.id, values);
@@ -397,7 +397,6 @@ const App: React.FC = () => {
       />
       <FormInputBesi
         open={showFormBesi}
-        proyekId={activeProyekId || ''}
         editItem={editingItem}
         onSubmit={handleAddBesi}
         onCancel={() => { setShowFormBesi(false); setEditingItem(null); }}
