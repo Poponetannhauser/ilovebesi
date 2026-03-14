@@ -157,7 +157,7 @@ const App: React.FC = () => {
           {/* Logo */}
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded bg-sky-700 flex items-center justify-center">
-              <span className="text-white font-black text-sm">QS</span>
+              <span className="text-white font-black text-sm">Fe</span>
             </div>
             <div>
               <h1 className="text-lg font-bold text-slate-800 leading-tight">ILoveBesi <span className="text-xs font-normal px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 ml-1">v1.0</span></h1>
