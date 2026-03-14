@@ -9,15 +9,14 @@ const { TextArea } = Input;
 
 interface Props {
   open: boolean;
-  proyekId: string;
   editItem?: ItemBesi | null;
-  onSubmit: (values: Omit<ItemBesi, 'id' | 'totalPanjang' | 'beratPerMeter' | 'totalBerat' | 'createdAt' | 'updatedAt'>) => void;
+  onSubmit: (values: Omit<ItemBesi, 'id' | 'totalPanjang' | 'beratPerMeter' | 'totalBerat' | 'totalBeratWaste' | 'createdAt' | 'updatedAt'>) => void;
   onCancel: () => void;
 }
 
 export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCancel }) => {
   const [form] = Form.useForm();
-  const [preview, setPreview] = useState({ totalPanjang: 0, totalBerat: 0, jumlahBatang: 0 });
+  const [preview, setPreview] = useState({ totalPanjang: 0, totalBerat: 0, totalBeratWaste: 0, jumlahBatang: 0 });
   const [currentShape, setCurrentShape] = useState<ShapeCode>('Lurus');
 
   React.useEffect(() => {
@@ -25,7 +24,7 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
       if (editItem) {
         form.setFieldsValue(editItem);
         setCurrentShape(editItem.shapeCode || 'Lurus');
-        recalcPreview(editItem.panjangPotongan, editItem.jumlahPotongan, editItem.jumlahElemen, editItem.diameter);
+        recalcPreview(editItem.panjangPotongan, editItem.jumlahPotongan, editItem.jumlahElemen, editItem.diameter, editItem.wastePercent || 0);
       } else {
         form.resetFields();
         form.setFieldsValue({
@@ -34,20 +33,22 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
           jumlahElemen: 1,
           jumlahPotongan: 1,
           shapeCode: 'Lurus',
+          wastePercent: 10, // Default 10%
         });
         setCurrentShape('Lurus');
-        setPreview({ totalPanjang: 0, totalBerat: 0, jumlahBatang: 0 });
+        setPreview({ totalPanjang: 0, totalBerat: 0, totalBeratWaste: 0, jumlahBatang: 0 });
       }
     }
   }, [open, editItem, form]);
 
-  const recalcPreview = (panjang: number, jmlPotongan: number, jmlElemen: number, diameter: DiameterBesi) => {
+  const recalcPreview = (panjang: number, jmlPotongan: number, jmlElemen: number, diameter: DiameterBesi, wastePercent: number = 0) => {
     if (panjang && jmlPotongan && jmlElemen && diameter) {
       const totalPanjang = panjang * jmlPotongan * jmlElemen;
       const beratPerMeter = BERAT_PER_METER[diameter] || 0;
       const totalBerat = totalPanjang * beratPerMeter;
+      const totalBeratWaste = totalBerat * (1 + wastePercent / 100);
       const jumlahBatang = Math.ceil(totalPanjang / PANJANG_STANDAR_BATANG);
-      setPreview({ totalPanjang, totalBerat, jumlahBatang });
+      setPreview({ totalPanjang, totalBerat, totalBeratWaste, jumlahBatang });
     }
   };
 
@@ -93,13 +94,14 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
       autoJumlah,
       Number(all.jumlahElemen) || 0,
       (all.diameter as DiameterBesi) || 12,
+      Number(all.wastePercent) || 0
     );
   };
 
   const handleOk = async () => {
     try {
       const vals = await form.validateFields();
-      onSubmit(vals as Omit<ItemBesi, 'id' | 'totalPanjang' | 'beratPerMeter' | 'totalBerat' | 'createdAt' | 'updatedAt'>);
+      onSubmit(vals as Omit<ItemBesi, 'id' | 'totalPanjang' | 'beratPerMeter' | 'totalBerat' | 'totalBeratWaste' | 'createdAt' | 'updatedAt'>);
       form.resetFields();
     } catch {
       // validation error
@@ -253,12 +255,12 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
         </Row>
 
         <Row gutter={[16, 0]}>
-          <Col xs={24} sm={8}>
+          <Col xs={24} sm={6}>
             <Form.Item
               name="panjangPotongan"
               label="P. Potongan (Manual)"
               rules={[{ required: true, type: 'number', min: 0.01 }]}
-              tooltip="Bisa diedit manual atau dihitung otomatis berdasar Shape."
+              tooltip="Panjang 1 batang potongan"
             >
               <InputNumber
                 id="panjangPotongan"
@@ -270,17 +272,17 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
               />
             </Form.Item>
           </Col>
-          <Col xs={12} sm={8}>
+          <Col xs={12} sm={6}>
             <Form.Item
               name="jumlahPotongan"
               label="Jml. Potong"
               rules={[{ required: true, type: 'number', min: 1 }]}
-              tooltip="Bisa diedit manual atau dihitung otomatis."
+              tooltip="Jumlah potongan dalam 1 buah elemen"
             >
               <InputNumber id="jumlahPotongan" className="w-full" placeholder="1" min={1} precision={0} />
             </Form.Item>
           </Col>
-          <Col xs={12} sm={8}>
+          <Col xs={12} sm={6}>
             <Form.Item
               name="jumlahElemen"
               label="Jml. Elemen (Kolom/Balok)"
@@ -290,24 +292,57 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
               <InputNumber id="jumlahElemen" className="w-full" placeholder="1" min={1} precision={0} />
             </Form.Item>
           </Col>
+          <Col xs={12} sm={6}>
+            <Form.Item
+              name="wastePercent"
+              label="Waste (%)"
+              tooltip="Faktor jaga-jaga (misal: 10 untuk 10%)"
+            >
+              <InputNumber id="wastePercent" className="w-full" placeholder="10" min={0} precision={1} />
+            </Form.Item>
+          </Col>
         </Row>
 
         {/* Live Preview */}
         {(preview.totalPanjang > 0) && (
-          <div className="glass-card p-4 mb-4 animate-fade-in-up">
-            <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-3">Preview Hasil Perhitungan</p>
-            <div className="grid grid-cols-3 gap-4">
+          <div className="glass-card p-4 mb-4 animate-fade-in-up border-l-4 border-sky-500">
+            <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-3">Penjabaran Logika Hitung (Sesuai Lapangan)</p>
+            
+            <div className="bg-slate-50 rounded p-3 mb-4 font-mono text-sm text-slate-700">
+              <div className="flex justify-between border-b border-slate-200 pb-1 mb-1">
+                <span>1. Total Panjang Kebutuhan:</span>
+                <span className="font-semibold">{preview.totalPanjang.toFixed(2)} meter</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-200 pb-1 mb-1">
+                <span>2. Konversi ke Batang Utuh (÷ 12m):</span>
+                <span className="font-semibold">{(preview.totalPanjang / PANJANG_STANDAR_BATANG).toFixed(2)} batang</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-200 pb-1 mb-1">
+                <span>3. Hitung Berat Asli (netto):</span>
+                <span className="font-semibold">{preview.totalBerat.toFixed(2)} Kg</span>
+              </div>
+              <div className="flex justify-between">
+                <span>4. Ditambah Waste ({(form.getFieldValue('wastePercent') || 0)}%):</span>
+                <span className="font-semibold text-emerald-600 font-bold">{preview.totalBeratWaste.toFixed(2)} Kg</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
                 <p className="text-2xl font-bold text-sky-600">{preview.totalPanjang.toFixed(2)}</p>
                 <p className="text-xs text-slate-500 mt-1">Total Panjang (m)</p>
               </div>
-              <div className="text-center border-x border-slate-200">
-                <p className="text-2xl font-bold text-emerald-600">{preview.totalBerat.toFixed(2)}</p>
-                <p className="text-xs text-slate-500 mt-1">Total Berat (kg)</p>
+              <div className="text-center md:border-l border-slate-200">
+                <p className="text-xl font-bold text-slate-600">{preview.totalBerat.toFixed(2)}</p>
+                <p className="text-xs text-slate-500 mt-1">Berat Murni (kg)</p>
               </div>
-              <div className="text-center">
+              <div className="text-center md:border-l border-slate-200">
+                <p className="text-2xl font-bold text-emerald-600">{preview.totalBeratWaste.toFixed(2)}</p>
+                <p className="text-xs text-slate-500 mt-1">Total + Waste (kg)</p>
+              </div>
+              <div className="text-center md:border-l border-slate-200">
                 <p className="text-2xl font-bold text-indigo-600">{preview.jumlahBatang}</p>
-                <p className="text-xs text-slate-500 mt-1">Jumlah Batang (@12m)</p>
+                <p className="text-xs text-slate-500 mt-1">Jml Batang (@12m)</p>
               </div>
             </div>
           </div>

@@ -60,13 +60,15 @@ export function createNewProyek(
 // ==============================
 // ITEM BESI CRUD
 // ==============================
-export function addItemToProyek(proyekId: string, item: Omit<ItemBesi, 'id' | 'totalPanjang' | 'beratPerMeter' | 'totalBerat' | 'createdAt' | 'updatedAt'>): Proyek | null {
+export function addItemToProyek(proyekId: string, item: Omit<ItemBesi, 'id' | 'totalPanjang' | 'beratPerMeter' | 'totalBerat' | 'totalBeratWaste' | 'createdAt' | 'updatedAt'>): Proyek | null {
   const proyek = getProyekById(proyekId);
   if (!proyek) return null;
 
   const beratPerMeter = BERAT_PER_METER[item.diameter];
   const totalPanjang = item.panjangPotongan * item.jumlahPotongan * item.jumlahElemen;
   const totalBerat = totalPanjang * beratPerMeter;
+  const wastePercent = item.wastePercent || 0;
+  const totalBeratWaste = totalBerat * (1 + wastePercent / 100);
 
   const newItem: ItemBesi = {
     ...item,
@@ -74,6 +76,7 @@ export function addItemToProyek(proyekId: string, item: Omit<ItemBesi, 'id' | 't
     beratPerMeter,
     totalPanjang,
     totalBerat,
+    totalBeratWaste,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -93,11 +96,14 @@ export function updateItemInProyek(proyekId: string, itemId: string, updates: Pa
     const beratPerMeter = BERAT_PER_METER[merged.diameter];
     const totalPanjang = merged.panjangPotongan * merged.jumlahPotongan * merged.jumlahElemen;
     const totalBerat = totalPanjang * beratPerMeter;
+    const wastePercent = merged.wastePercent || 0;
+    const totalBeratWaste = totalBerat * (1 + wastePercent / 100);
     return {
       ...merged,
       beratPerMeter,
       totalPanjang,
       totalBerat,
+      totalBeratWaste,
       updatedAt: new Date().toISOString(),
     };
   });
@@ -122,13 +128,14 @@ export function hitungJumlahBatang(totalPanjang: number): number {
 }
 
 export function getRekapDiameter(items: ItemBesi[]) {
-  const map = new Map<DiameterBesi, { totalPanjang: number; totalBerat: number }>();
+  const map = new Map<DiameterBesi, { totalPanjang: number; totalBerat: number; totalBeratWaste: number }>();
 
   items.forEach(item => {
-    const existing = map.get(item.diameter) || { totalPanjang: 0, totalBerat: 0 };
+    const existing = map.get(item.diameter) || { totalPanjang: 0, totalBerat: 0, totalBeratWaste: 0 };
     map.set(item.diameter, {
       totalPanjang: existing.totalPanjang + item.totalPanjang,
       totalBerat: existing.totalBerat + item.totalBerat,
+      totalBeratWaste: existing.totalBeratWaste + (item.totalBeratWaste || item.totalBerat),
     });
   });
 
@@ -143,6 +150,10 @@ export function getRekapDiameter(items: ItemBesi[]) {
 
 export function getTotalBerat(items: ItemBesi[]): number {
   return items.reduce((sum, item) => sum + item.totalBerat, 0);
+}
+
+export function getTotalBeratWaste(items: ItemBesi[]): number {
+  return items.reduce((sum, item) => sum + (item.totalBeratWaste || item.totalBerat), 0);
 }
 
 // ==============================

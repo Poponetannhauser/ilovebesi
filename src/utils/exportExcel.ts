@@ -36,7 +36,9 @@ export function exportToExcel(proyek: Proyek): void {
       'Jml Elemen',
       'Total Panjang (m)',
       'Berat/Meter (kg/m)',
-      'Total Berat (kg)',
+      'Total Netto (kg)',
+      'Waste (%)',
+      'Total + Waste (kg)',
       'Catatan',
     ],
   ].filter(row => row.length > 0);
@@ -60,18 +62,23 @@ export function exportToExcel(proyek: Proyek): void {
       item.totalPanjang,
       item.beratPerMeter,
       item.totalBerat,
+      item.wastePercent || 0,
+      item.totalBeratWaste || item.totalBerat,
       item.catatan || '-',
     ] as (string | number)[]);
   });
 
   // Total row
   const totalBerat = getTotalBerat(proyek.items);
+  const totalBeratWaste = proyek.items.reduce((s, i) => s + (i.totalBeratWaste || i.totalBerat), 0);
   const totalPanjang = proyek.items.reduce((s, i) => s + i.totalPanjang, 0);
   detailData.push([
     '', '', '', '', '', '', '', '', '', '', '', '', 'TOTAL',
     totalPanjang.toFixed(2),
     '',
     totalBerat.toFixed(2),
+    '',
+    totalBeratWaste.toFixed(2),
     '',
   ]);
 
@@ -94,7 +101,9 @@ export function exportToExcel(proyek: Proyek): void {
     { wch: 13 },  // Jml Elemen
     { wch: 16 },  // Total Panjang
     { wch: 16 },  // Berat/m
-    { wch: 14 },  // Total Berat
+    { wch: 14 },  // Total Netto
+    { wch: 10 },  // Waste %
+    { wch: 18 },  // Total Waste
     { wch: 22 },  // Catatan
   ];
 
@@ -107,7 +116,7 @@ export function exportToExcel(proyek: Proyek): void {
     [`REKAPITULASI KEBUTUHAN BESI PER DIAMETER`],
     [`Proyek: ${proyek.namaProyek}`],
     [],
-    ['Diameter', 'Berat/Meter (kg/m)', 'Total Panjang (m)', 'Total Berat (kg)', 'Total Berat (ton)', `Jumlah Batang (@ ${PANJANG_STANDAR_BATANG}m)`],
+    ['Diameter', 'Berat/Meter (kg/m)', 'Total Panjang (m)', 'Netto (kg)', 'Total + Waste (kg)', 'Total + Waste (ton)', `Jumlah Batang (@ ${PANJANG_STANDAR_BATANG}m)`],
   ];
 
   rekapDiameter.forEach(r => {
@@ -116,7 +125,8 @@ export function exportToExcel(proyek: Proyek): void {
       BERAT_PER_METER[r.diameter as DiameterBesi],
       r.totalPanjang.toFixed(2),
       r.totalBerat.toFixed(2),
-      (r.totalBerat / 1000).toFixed(3),
+      (r.totalBeratWaste || r.totalBerat).toFixed(2),
+      ((r.totalBeratWaste || r.totalBerat) / 1000).toFixed(3),
       r.jumlahBatang,
     ]);
   });
@@ -125,23 +135,25 @@ export function exportToExcel(proyek: Proyek): void {
     'TOTAL', '',
     rekapDiameter.reduce((s, r) => s + r.totalPanjang, 0).toFixed(2),
     rekapDiameter.reduce((s, r) => s + r.totalBerat, 0).toFixed(2),
-    (rekapDiameter.reduce((s, r) => s + r.totalBerat, 0) / 1000).toFixed(3),
+    rekapDiameter.reduce((s, r) => s + (r.totalBeratWaste || r.totalBerat), 0).toFixed(2),
+    (rekapDiameter.reduce((s, r) => s + (r.totalBeratWaste || r.totalBerat), 0) / 1000).toFixed(3),
     rekapDiameter.reduce((s, r) => s + r.jumlahBatang, 0),
   ]);
 
   const ws2 = XLSX.utils.aoa_to_sheet(rekapData);
   ws2['!cols'] = [
-    { wch: 12 }, { wch: 18 }, { wch: 18 }, { wch: 16 }, { wch: 16 }, { wch: 22 },
+    { wch: 12 }, { wch: 18 }, { wch: 18 }, { wch: 16 }, { wch: 18 }, { wch: 18 }, { wch: 22 },
   ];
   XLSX.utils.book_append_sheet(wb, ws2, 'Rekap Per Diameter');
 
   // ---- Sheet 3: Rekap Per Pekerjaan ----
-  const rekapPekerjaanMap = new Map<string, { totalBerat: number; totalPanjang: number }>();
+  const rekapPekerjaanMap = new Map<string, { totalBerat: number; totalBeratWaste: number; totalPanjang: number }>();
   proyek.items.forEach(item => {
     const key = item.typePekerjaan;
-    const existing = rekapPekerjaanMap.get(key) || { totalBerat: 0, totalPanjang: 0 };
+    const existing = rekapPekerjaanMap.get(key) || { totalBerat: 0, totalBeratWaste: 0, totalPanjang: 0 };
     rekapPekerjaanMap.set(key, {
       totalBerat: existing.totalBerat + item.totalBerat,
+      totalBeratWaste: existing.totalBeratWaste + (item.totalBeratWaste || item.totalBerat),
       totalPanjang: existing.totalPanjang + item.totalPanjang,
     });
   });
@@ -150,30 +162,32 @@ export function exportToExcel(proyek: Proyek): void {
     [`REKAPITULASI KEBUTUHAN BESI PER JENIS PEKERJAAN`],
     [`Proyek: ${proyek.namaProyek}`],
     [],
-    ['Jenis Pekerjaan', 'Total Panjang (m)', 'Total Berat (kg)', 'Total Berat (ton)', 'Persentase (%)'],
+    ['Jenis Pekerjaan', 'Total Panjang (m)', 'Netto (kg)', 'Total + Waste (kg)', 'Total + Waste (ton)', 'Persentase (%)'],
   ];
 
-  const totalBeratAll = getTotalBerat(proyek.items);
+  const totalBeratAllWaste = proyek.items.reduce((s, i) => s + (i.totalBeratWaste || i.totalBerat), 0);
   Array.from(rekapPekerjaanMap.entries()).forEach(([pekerjaan, data]) => {
     rekapPekerjaanData.push([
       pekerjaan,
       data.totalPanjang.toFixed(2),
       data.totalBerat.toFixed(2),
-      (data.totalBerat / 1000).toFixed(3),
-      totalBeratAll > 0 ? ((data.totalBerat / totalBeratAll) * 100).toFixed(1) + '%' : '0%',
+      data.totalBeratWaste.toFixed(2),
+      (data.totalBeratWaste / 1000).toFixed(3),
+      totalBeratAllWaste > 0 ? ((data.totalBeratWaste / totalBeratAllWaste) * 100).toFixed(1) + '%' : '0%',
     ]);
   });
 
   rekapPekerjaanData.push([
     'TOTAL',
     proyek.items.reduce((s, i) => s + i.totalPanjang, 0).toFixed(2),
-    totalBeratAll.toFixed(2),
-    (totalBeratAll / 1000).toFixed(3),
+    proyek.items.reduce((s, i) => s + i.totalBerat, 0).toFixed(2),
+    totalBeratAllWaste.toFixed(2),
+    (totalBeratAllWaste / 1000).toFixed(3),
     '100%',
   ]);
 
   const ws3 = XLSX.utils.aoa_to_sheet(rekapPekerjaanData);
-  ws3['!cols'] = [{ wch: 20 }, { wch: 18 }, { wch: 16 }, { wch: 16 }, { wch: 16 }];
+  ws3['!cols'] = [{ wch: 20 }, { wch: 18 }, { wch: 16 }, { wch: 18 }, { wch: 18 }, { wch: 16 }];
   XLSX.utils.book_append_sheet(wb, ws3, 'Rekap Per Pekerjaan');
 
   // Save file

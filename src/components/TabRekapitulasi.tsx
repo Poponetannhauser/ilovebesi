@@ -11,6 +11,7 @@ import {
 	getRekapDiameter,
 	formatNumber,
 	getTotalBerat,
+    getTotalBeratWaste,
 } from "../utils/storage";
 
 interface Props {
@@ -23,6 +24,7 @@ interface RekapDiameterRow {
 	totalPanjang: number;
 	totalBerat: number;
 	totalBeratTon: number;
+    totalBeratWaste: number;
 	jumlahBatang: number;
 }
 
@@ -31,26 +33,30 @@ interface RekapPekerjaanRow {
 	totalPanjang: number;
 	totalBerat: number;
 	totalBeratTon: number;
+    totalBeratWaste: number;
 	persen: number;
 }
 
 export const TabRekapitulasi: React.FC<Props> = ({ items }) => {
 	const rekapDiameter = getRekapDiameter(items);
 	const totalBerat = getTotalBerat(items);
+    const totalBeratWaste = getTotalBeratWaste(items);
 	const totalPanjang = items.reduce((s, i) => s + i.totalPanjang, 0);
 
 	// Rekap per pekerjaan
 	const pekerjaanMap = new Map<
 		TypePekerjaan,
-		{ totalBerat: number; totalPanjang: number }
+		{ totalBerat: number; totalBeratWaste: number; totalPanjang: number }
 	>();
 	items.forEach((item) => {
 		const existing = pekerjaanMap.get(item.typePekerjaan) || {
 			totalBerat: 0,
+            totalBeratWaste: 0,
 			totalPanjang: 0,
 		};
 		pekerjaanMap.set(item.typePekerjaan, {
 			totalBerat: existing.totalBerat + item.totalBerat,
+            totalBeratWaste: existing.totalBeratWaste + (item.totalBeratWaste || item.totalBerat),
 			totalPanjang: existing.totalPanjang + item.totalPanjang,
 		});
 	});
@@ -61,7 +67,8 @@ export const TabRekapitulasi: React.FC<Props> = ({ items }) => {
 			totalPanjang: d.totalPanjang,
 			totalBerat: d.totalBerat,
 			totalBeratTon: d.totalBerat / 1000,
-			persen: totalBerat > 0 ? (d.totalBerat / totalBerat) * 100 : 0,
+            totalBeratWaste: d.totalBeratWaste,
+			persen: totalBeratWaste > 0 ? (d.totalBeratWaste / totalBeratWaste) * 100 : 0,
 		}))
 		.sort((a, b) => b.totalBerat - a.totalBerat);
 
@@ -71,6 +78,7 @@ export const TabRekapitulasi: React.FC<Props> = ({ items }) => {
 		totalPanjang: r.totalPanjang,
 		totalBerat: r.totalBerat,
 		totalBeratTon: r.totalBerat / 1000,
+        totalBeratWaste: r.totalBeratWaste,
 		jumlahBatang: r.jumlahBatang,
 	}));
 
@@ -105,13 +113,24 @@ export const TabRekapitulasi: React.FC<Props> = ({ items }) => {
 			),
 		},
 		{
-			title: "Total Berat (kg)",
+			title: "Berat Netto (kg)",
 			dataIndex: "totalBerat",
 			key: "totalBerat",
 			align: "right",
-			sorter: (a, b) => a.totalBerat - b.totalBerat,
 			render: (val: number) => (
-				<span className="font-mono font-semibold text-emerald-600">
+				<span className="font-mono text-slate-500">
+					{formatNumber(val, 2)}
+				</span>
+			),
+		},
+		{
+			title: "Total + Waste (kg)",
+			dataIndex: "totalBeratWaste",
+			key: "totalBeratWaste",
+			align: "right",
+			sorter: (a, b) => a.totalBeratWaste - b.totalBeratWaste,
+			render: (val: number) => (
+				<span className="font-mono font-bold text-emerald-600">
 					{formatNumber(val, 2)}
 				</span>
 			),
@@ -160,12 +179,23 @@ export const TabRekapitulasi: React.FC<Props> = ({ items }) => {
 			),
 		},
 		{
-			title: "Total Berat (kg)",
+			title: "Netto (kg)",
 			dataIndex: "totalBerat",
 			key: "totalBerat",
 			align: "right",
 			render: (val: number) => (
-				<span className="font-mono font-semibold text-emerald-600">
+				<span className="font-mono text-slate-500">
+					{formatNumber(val, 2)}
+				</span>
+			),
+		},
+		{
+			title: "Total + Waste (kg)",
+			dataIndex: "totalBeratWaste",
+			key: "totalBeratWaste",
+			align: "right",
+			render: (val: number) => (
+				<span className="font-mono font-bold text-emerald-600">
 					{formatNumber(val, 2)}
 				</span>
 			),
@@ -229,16 +259,16 @@ export const TabRekapitulasi: React.FC<Props> = ({ items }) => {
 						unit: "m",
 					},
 					{
-						label: "Total Berat",
+						label: "Total Berat Murni",
 						value: formatNumber(totalBerat, 2),
-						color: "text-emerald-600",
+						color: "text-slate-600",
 						unit: "kg",
 					},
 					{
-						label: "Total Berat",
-						value: (totalBerat / 1000).toFixed(3),
-						color: "text-emerald-500",
-						unit: "ton",
+						label: "Total Berat + Waste",
+						value: formatNumber(totalBeratWaste, 2),
+						color: "text-emerald-600",
+						unit: "kg",
 					},
 				].map((card, i) => (
 					<div
@@ -283,16 +313,21 @@ export const TabRekapitulasi: React.FC<Props> = ({ items }) => {
 									</span>
 								</Table.Summary.Cell>
 								<Table.Summary.Cell index={3} align="right">
-									<span className="font-mono font-bold text-emerald-600">
+									<span className="font-mono font-bold text-slate-500">
 										{formatNumber(totalBerat, 2)}
 									</span>
 								</Table.Summary.Cell>
 								<Table.Summary.Cell index={4} align="right">
-									<span className="font-mono font-bold text-emerald-500">
-										{(totalBerat / 1000).toFixed(3)}
+									<span className="font-mono font-bold text-emerald-600">
+										{formatNumber(totalBeratWaste, 2)}
 									</span>
 								</Table.Summary.Cell>
 								<Table.Summary.Cell index={5} align="right">
+									<span className="font-mono font-bold text-emerald-500">
+										{(totalBeratWaste / 1000).toFixed(3)}
+									</span>
+								</Table.Summary.Cell>
+								<Table.Summary.Cell index={6} align="right">
 									<span className="font-mono font-bold text-purple-400">
 										{diameterRows.reduce((s, r) => s + r.jumlahBatang, 0)}
 									</span>
@@ -328,16 +363,21 @@ export const TabRekapitulasi: React.FC<Props> = ({ items }) => {
 									</span>
 								</Table.Summary.Cell>
 								<Table.Summary.Cell index={2} align="right">
-									<span className="font-mono font-bold text-emerald-600">
+									<span className="font-mono font-bold text-slate-500">
 										{formatNumber(totalBerat, 2)}
 									</span>
 								</Table.Summary.Cell>
 								<Table.Summary.Cell index={3} align="right">
-									<span className="font-mono font-bold text-emerald-500">
-										{(totalBerat / 1000).toFixed(3)}
+									<span className="font-mono font-bold text-emerald-600">
+										{formatNumber(totalBeratWaste, 2)}
 									</span>
 								</Table.Summary.Cell>
 								<Table.Summary.Cell index={4} align="right">
+									<span className="font-mono font-bold text-emerald-500">
+										{(totalBeratWaste / 1000).toFixed(3)}
+									</span>
+								</Table.Summary.Cell>
+								<Table.Summary.Cell index={5} align="right">
 									<span className="text-slate-400 text-xs">100%</span>
 								</Table.Summary.Cell>
 							</Table.Summary.Row>

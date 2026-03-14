@@ -47,6 +47,10 @@ export interface ItemBesi {
 	beratPerMeter: number; // kg/m berdasarkan diameter
 	totalBerat: number; // computed: totalPanjang * beratPerMeter
 
+    // Toleransi / Faktor Jaga-jaga
+    wastePercent?: number; // misalnya 10 untuk 10%
+    totalBeratWaste: number; // computed: totalBerat + waste
+
 	// Metadata
 	catatan?: string;
 	createdAt: string;
