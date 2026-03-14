@@ -283,8 +283,9 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
           <Col xs={12} sm={8}>
             <Form.Item
               name="jumlahElemen"
-              label="Jml. Elemen"
+              label="Jml. Elemen (Kolom/Balok)"
               rules={[{ required: true, type: 'number', min: 1 }]}
+              tooltip="Jumlah total kolom, balok, atau pelat yang ukurannya sama"
             >
               <InputNumber id="jumlahElemen" className="w-full" placeholder="1" min={1} precision={0} />
             </Form.Item>
