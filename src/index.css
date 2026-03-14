@@ -1,0 +1,106 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #f1f5f9; /* Light gray background */
+  color: #334155; /* Dark gray text */
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* ===== CUSTOM SCROLLBAR ===== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #e2e8f0;
+}
+::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* ===== ANT DESIGN LIGHT OVERRIDES ===== */
+.ant-table-thead > tr > th {
+  background: #e2e8f0 !important;
+  color: #475569 !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.02em !important;
+  border-bottom: 2px solid #cbd5e1 !important;
+}
+.ant-table-tbody > tr > td {
+  font-size: 13px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+.ant-table-summary > tr > td {
+  background: #f8fafc !important;
+  color: #1e293b !important;
+  font-weight: 700 !important;
+  border-top: 2px solid #cbd5e1 !important;
+}
+.ant-form-item-label > label {
+  font-weight: 500 !important;
+  color: #475569 !important;
+}
+.ant-modal-content {
+  border-radius: 8px !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+.ant-modal-header {
+  border-bottom: 1px solid #e2e8f0 !important;
+  margin-bottom: 16px !important;
+  padding-bottom: 12px !important;
+}
+
+/* ===== STANDARD CARD ===== */
+.glass-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06);
+}
+
+/* ===== BRAND COLORS ===== */
+.text-brand {
+  color: #0369a1; /* Professional Blue */
+}
+.bg-brand {
+  background: #0369a1;
+}
+
+/* Row highlight for alternate rows (Zebra striping - typical in enterprise apps) */
+.ant-table-tbody > tr:nth-child(even) > td {
+  background: #f8fafc !important;
+}
+.ant-table-tbody > tr:hover > td {
+  background: #e0f2fe !important; /* light blue highlight */
+}
+
+.striped-bg {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    #fee2e2 10px,
+    #fee2e2 20px
+  );
+}
+
