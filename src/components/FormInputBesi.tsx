@@ -57,6 +57,7 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
     }
 
     let autoPanjang = Number(all.panjangPotongan) || 0;
+    let autoJumlah = Number(all.jumlahPotongan) || 0;
 
     // Auto-compute panjangPotongan if shape or dimensions changed
     if (changed.shapeValues || changed.shapeCode) {
@@ -75,9 +76,21 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
       form.setFieldsValue({ panjangPotongan: autoPanjang });
     }
 
+    // Auto-compute jumlahPotongan if tinggiKolom or jarakSengkang changes
+    if (changed.tinggiKolom !== undefined || changed.jarakSengkang !== undefined || changed.shapeCode) {
+      if (all.shapeCode === 'Sengkang') {
+        const tinggi = Number(all.tinggiKolom) || 0;
+        const jarak = Number(all.jarakSengkang) || 0;
+        if (tinggi > 0 && jarak > 0) {
+          autoJumlah = Math.ceil(tinggi / jarak) + 1;
+          form.setFieldsValue({ jumlahPotongan: autoJumlah });
+        }
+      }
+    }
+
     recalcPreview(
       autoPanjang,
-      Number(all.jumlahPotongan) || 0,
+      autoJumlah,
       Number(all.jumlahElemen) || 0,
       (all.diameter as DiameterBesi) || 12,
     );
@@ -216,6 +229,25 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
                   </Col>
                 )}
               </Row>
+              
+              {/* Kalkulator Sengkang Extra */}
+              {['Sengkang'].includes(currentShape) && (
+                <div className="mt-3 pt-3 border-t border-slate-200">
+                  <p className="text-xs font-semibold text-slate-500 mb-2">Hitung Otomatis Jumlah Sengkang</p>
+                  <Row gutter={[8, 8]}>
+                    <Col xs={12}>
+                      <Form.Item name="tinggiKolom" label="Tinggi Kolom/Balok (m)" tooltip="Panjang total elemen yang akan diisi sengkang" style={{ marginBottom: 0 }}>
+                        <InputNumber className="w-full" step={0.1} min={0} placeholder="0.00" precision={2} />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={12}>
+                      <Form.Item name="jarakSengkang" label="Jarak Sengkang (m)" tooltip="Jarak antar sengkang, misalnya 0.15 (15cm)" style={{ marginBottom: 0 }}>
+                        <InputNumber className="w-full" step={0.01} min={0} placeholder="0.00" precision={2} />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                </div>
+              )}
             </div>
           </Col>
         </Row>
@@ -243,6 +275,7 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
               name="jumlahPotongan"
               label="Jml. Potong"
               rules={[{ required: true, type: 'number', min: 1 }]}
+              tooltip="Bisa diedit manual atau dihitung otomatis."
             >
               <InputNumber id="jumlahPotongan" className="w-full" placeholder="1" min={1} precision={0} />
             </Form.Item>
