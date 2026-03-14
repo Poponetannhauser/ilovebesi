@@ -313,16 +313,20 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
                 <span>1. Total Panjang Kebutuhan:</span>
                 <span className="font-semibold">{preview.totalPanjang.toFixed(2)} meter</span>
               </div>
-              <div className="flex justify-between border-b border-slate-200 pb-1 mb-1">
+              <div className="flex justify-between border-b border-slate-200 pb-1 mb-1 text-sky-700">
                 <span>2. Konversi ke Batang Utuh (÷ 12m):</span>
                 <span className="font-semibold">{(preview.totalPanjang / PANJANG_STANDAR_BATANG).toFixed(2)} batang</span>
               </div>
               <div className="flex justify-between border-b border-slate-200 pb-1 mb-1">
-                <span>3. Hitung Berat Asli (netto):</span>
+                <span>3. Berat 1 Batang Besi ({PANJANG_STANDAR_BATANG}m):</span>
+                <span className="font-semibold">{(BERAT_PER_METER[form.getFieldValue('diameter') as DiameterBesi] * PANJANG_STANDAR_BATANG || 0).toFixed(2)} Kg</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-200 pb-1 mb-1">
+                <span>4. Hitung Berat Asli (Langkah 2 × Langkah 3):</span>
                 <span className="font-semibold">{preview.totalBerat.toFixed(2)} Kg</span>
               </div>
               <div className="flex justify-between">
-                <span>4. Ditambah Waste ({(form.getFieldValue('wastePercent') || 0)}%):</span>
+                <span>5. Ditambah Waste ({(form.getFieldValue('wastePercent') || 0)}%):</span>
                 <span className="font-semibold text-emerald-600 font-bold">{preview.totalBeratWaste.toFixed(2)} Kg</span>
               </div>
             </div>
