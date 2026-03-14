@@ -16,7 +16,7 @@ interface Props {
 
 export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCancel }) => {
   const [form] = Form.useForm();
-  const [preview, setPreview] = useState({ totalPanjang: 0, totalBerat: 0, totalBeratWaste: 0, jumlahBatang: 0 });
+  const [preview, setPreview] = useState({ totalPanjang: 0, totalPanjangDenganOverlap: 0, overlapPerSambungan: 0, totalBerat: 0, totalBeratWaste: 0, jumlahBatang: 0 });
   const [currentShape, setCurrentShape] = useState<ShapeCode>('Lurus');
 
   React.useEffect(() => {
@@ -24,7 +24,7 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
       if (editItem) {
         form.setFieldsValue(editItem);
         setCurrentShape(editItem.shapeCode || 'Lurus');
-        recalcPreview(editItem.panjangPotongan, editItem.jumlahPotongan, editItem.jumlahElemen, editItem.diameter, editItem.wastePercent || 0);
+        recalcPreview(editItem.panjangPotongan, editItem.jumlahPotongan, editItem.jumlahElemen, editItem.diameter, editItem.wastePercent || 0, editItem.jumlahSambungan || 0);
       } else {
         form.resetFields();
         form.setFieldsValue({
@@ -34,21 +34,26 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
           jumlahPotongan: 1,
           shapeCode: 'Lurus',
           wastePercent: 10, // Default 10%
+          jumlahSambungan: 0,
         });
         setCurrentShape('Lurus');
-        setPreview({ totalPanjang: 0, totalBerat: 0, totalBeratWaste: 0, jumlahBatang: 0 });
+        setPreview({ totalPanjang: 0, totalPanjangDenganOverlap: 0, overlapPerSambungan: 0, totalBerat: 0, totalBeratWaste: 0, jumlahBatang: 0 });
       }
     }
   }, [open, editItem, form]);
 
-  const recalcPreview = (panjang: number, jmlPotongan: number, jmlElemen: number, diameter: DiameterBesi, wastePercent: number = 0) => {
+  const recalcPreview = (panjang: number, jmlPotongan: number, jmlElemen: number, diameter: DiameterBesi, wastePercent: number = 0, jumlahSambungan: number = 0) => {
     if (panjang && jmlPotongan && jmlElemen && diameter) {
       const totalPanjang = panjang * jmlPotongan * jmlElemen;
+      // Overlap: 40x diameter (dalam meter) per sambungan, per elemen
+      const overlapPerSambungan = 40 * (diameter / 1000); // meter
+      const totalPanjangOverlap = overlapPerSambungan * jumlahSambungan * jmlElemen;
+      const totalPanjangDenganOverlap = totalPanjang + totalPanjangOverlap;
       const beratPerMeter = BERAT_PER_METER[diameter] || 0;
-      const totalBerat = totalPanjang * beratPerMeter;
+      const totalBerat = totalPanjangDenganOverlap * beratPerMeter;
       const totalBeratWaste = totalBerat * (1 + wastePercent / 100);
-      const jumlahBatang = Math.ceil(totalPanjang / PANJANG_STANDAR_BATANG);
-      setPreview({ totalPanjang, totalBerat, totalBeratWaste, jumlahBatang });
+      const jumlahBatang = Math.ceil(totalPanjangDenganOverlap / PANJANG_STANDAR_BATANG);
+      setPreview({ totalPanjang, totalPanjangDenganOverlap, overlapPerSambungan, totalBerat, totalBeratWaste, jumlahBatang });
     }
   };
 
@@ -94,7 +99,8 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
       autoJumlah,
       Number(all.jumlahElemen) || 0,
       (all.diameter as DiameterBesi) || 12,
-      Number(all.wastePercent) || 0
+      Number(all.wastePercent) || 0,
+      Number(all.jumlahSambungan) || 0,
     );
   };
 
@@ -254,13 +260,14 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
           </Col>
         </Row>
 
+        {/* Baris 1: Data Kuantitas Utama */}
         <Row gutter={[16, 0]}>
-          <Col xs={24} sm={6}>
+          <Col xs={24} sm={8}>
             <Form.Item
               name="panjangPotongan"
-              label="P. Potongan (Manual)"
+              label="P. Potongan (m)"
               rules={[{ required: true, type: 'number', min: 0.01 }]}
-              tooltip="Panjang 1 batang potongan"
+              tooltip="Panjang 1 potongan besi dalam meter"
             >
               <InputNumber
                 id="panjangPotongan"
@@ -272,36 +279,54 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
               />
             </Form.Item>
           </Col>
-          <Col xs={12} sm={6}>
+          <Col xs={12} sm={8}>
             <Form.Item
               name="jumlahPotongan"
-              label="Jml. Potong"
+              label="Jml. Potong (batang/elemen)"
               rules={[{ required: true, type: 'number', min: 1 }]}
-              tooltip="Jumlah potongan dalam 1 buah elemen"
+              tooltip="Jumlah batang besi dalam 1 elemen (misal: 1 kolom punya 10 batang)"
             >
               <InputNumber id="jumlahPotongan" className="w-full" placeholder="1" min={1} precision={0} />
             </Form.Item>
           </Col>
-          <Col xs={12} sm={6}>
+          <Col xs={12} sm={8}>
             <Form.Item
               name="jumlahElemen"
               label="Jml. Elemen (Kolom/Balok)"
               rules={[{ required: true, type: 'number', min: 1 }]}
-              tooltip="Jumlah total kolom, balok, atau pelat yang ukurannya sama"
+              tooltip="Jumlah total kolom/balok yang identik"
             >
               <InputNumber id="jumlahElemen" className="w-full" placeholder="1" min={1} precision={0} />
             </Form.Item>
           </Col>
-          <Col xs={12} sm={6}>
-            <Form.Item
-              name="wastePercent"
-              label="Waste (%)"
-              tooltip="Faktor jaga-jaga (misal: 10 untuk 10%)"
-            >
-              <InputNumber id="wastePercent" className="w-full" placeholder="10" min={0} precision={1} />
-            </Form.Item>
-          </Col>
         </Row>
+
+        {/* Baris 2: Faktor Koreksi */}
+        <div className="p-3 rounded-lg border border-slate-200 bg-slate-50 mb-4">
+          <p className="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wider">Faktor Koreksi</p>
+          <Row gutter={[16, 0]}>
+            <Col xs={12} sm={12}>
+              <Form.Item
+                name="wastePercent"
+                label="Waste / Susut (%)"
+                tooltip="Persentase tambahan untuk buangan besi (misal: 10 untuk 10%)"
+                style={{ marginBottom: 0 }}
+              >
+                <InputNumber id="wastePercent" className="w-full" placeholder="10" min={0} precision={1} addonAfter="%" />
+              </Form.Item>
+            </Col>
+            <Col xs={12} sm={12}>
+              <Form.Item
+                name="jumlahSambungan"
+                label="Jml. Sambungan / Overlap"
+                tooltip={`Titik sambung besi per elemen. Sistem otomatis tambah 40×D meter per sambungan. Contoh: pilar 15m → isi 1`}
+                style={{ marginBottom: 0 }}
+              >
+                <InputNumber id="jumlahSambungan" className="w-full" placeholder="0" min={0} precision={0} addonAfter="titik" />
+              </Form.Item>
+            </Col>
+          </Row>
+        </div>
 
         {/* Live Preview */}
         {(preview.totalPanjang > 0) && (
@@ -313,28 +338,34 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
                 <span>1. Total Panjang Kebutuhan:</span>
                 <span className="font-semibold">{preview.totalPanjang.toFixed(2)} meter</span>
               </div>
+              {preview.overlapPerSambungan > 0 && (
+                <div className="flex justify-between border-b border-slate-200 pb-1 mb-1 text-orange-600">
+                  <span>+ Tambahan Overlap ({(form.getFieldValue('jumlahSambungan') || 0)} sambungan × {preview.overlapPerSambungan.toFixed(2)}m):</span>
+                  <span className="font-semibold">+{(preview.totalPanjangDenganOverlap - preview.totalPanjang).toFixed(2)} meter</span>
+                </div>
+              )}
               <div className="flex justify-between border-b border-slate-200 pb-1 mb-1 text-sky-700">
-                <span>2. Konversi ke Batang Utuh (÷ 12m):</span>
-                <span className="font-semibold">{(preview.totalPanjang / PANJANG_STANDAR_BATANG).toFixed(2)} batang</span>
+                <span>2. Total Panjang + Overlap:</span>
+                <span className="font-semibold">{preview.totalPanjangDenganOverlap.toFixed(2)} meter → {(preview.totalPanjangDenganOverlap / PANJANG_STANDAR_BATANG).toFixed(2)} batang</span>
               </div>
               <div className="flex justify-between border-b border-slate-200 pb-1 mb-1">
                 <span>3. Berat 1 Batang Besi ({PANJANG_STANDAR_BATANG}m):</span>
                 <span className="font-semibold">{(BERAT_PER_METER[form.getFieldValue('diameter') as DiameterBesi] * PANJANG_STANDAR_BATANG || 0).toFixed(2)} Kg</span>
               </div>
               <div className="flex justify-between border-b border-slate-200 pb-1 mb-1">
-                <span>4. Hitung Berat Asli (Langkah 2 × Langkah 3):</span>
+                <span>4. Berat Asli (Langkah 2 × Berat/m):</span>
                 <span className="font-semibold">{preview.totalBerat.toFixed(2)} Kg</span>
               </div>
               <div className="flex justify-between">
                 <span>5. Ditambah Waste ({(form.getFieldValue('wastePercent') || 0)}%):</span>
-                <span className="font-semibold text-emerald-600 font-bold">{preview.totalBeratWaste.toFixed(2)} Kg</span>
+                <span className="font-bold text-emerald-600">{preview.totalBeratWaste.toFixed(2)} Kg</span>
               </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
-                <p className="text-2xl font-bold text-sky-600">{preview.totalPanjang.toFixed(2)}</p>
-                <p className="text-xs text-slate-500 mt-1">Total Panjang (m)</p>
+                <p className="text-2xl font-bold text-sky-600">{preview.totalPanjangDenganOverlap.toFixed(2)}</p>
+                <p className="text-xs text-slate-500 mt-1">Total Panjang + Overlap (m)</p>
               </div>
               <div className="text-center md:border-l border-slate-200">
                 <p className="text-xl font-bold text-slate-600">{preview.totalBerat.toFixed(2)}</p>

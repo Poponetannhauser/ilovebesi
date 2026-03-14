@@ -49,6 +49,7 @@ export interface ItemBesi {
 
     // Toleransi / Faktor Jaga-jaga
     wastePercent?: number; // misalnya 10 untuk 10%
+    jumlahSambungan?: number; // jumlah titik sambungan/overlap per elemen
     totalBeratWaste: number; // computed: totalBerat + waste
 
 	// Metadata
