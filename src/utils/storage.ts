@@ -69,6 +69,7 @@ export function addItemToProyek(proyekId: string, item: Omit<ItemBesi, 'id' | 't
   const totalBerat = totalPanjang * beratPerMeter;
   const wastePercent = item.wastePercent || 0;
   const totalBeratWaste = totalBerat * (1 + wastePercent / 100);
+  const estimasiBiaya = item.hargaPerKg ? totalBeratWaste * item.hargaPerKg : undefined;
 
   const newItem: ItemBesi = {
     ...item,
@@ -77,6 +78,7 @@ export function addItemToProyek(proyekId: string, item: Omit<ItemBesi, 'id' | 't
     totalPanjang,
     totalBerat,
     totalBeratWaste,
+    estimasiBiaya,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -98,12 +100,14 @@ export function updateItemInProyek(proyekId: string, itemId: string, updates: Pa
     const totalBerat = totalPanjang * beratPerMeter;
     const wastePercent = merged.wastePercent || 0;
     const totalBeratWaste = totalBerat * (1 + wastePercent / 100);
+    const estimasiBiaya = merged.hargaPerKg ? totalBeratWaste * merged.hargaPerKg : undefined;
     return {
       ...merged,
       beratPerMeter,
       totalPanjang,
       totalBerat,
       totalBeratWaste,
+      estimasiBiaya,
       updatedAt: new Date().toISOString(),
     };
   });

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Modal, Form, Input, InputNumber, Select, Button, Row, Col, Divider } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import type { DiameterBesi, ItemBesi, ShapeCode } from '../types';
-import { DIAMETER_OPTIONS, TYPE_PEKERJAAN_OPTIONS, TYPE_BESI_OPTIONS, BERAT_PER_METER, PANJANG_STANDAR_BATANG, SHAPE_CODE_OPTIONS } from '../types';
+import { DIAMETER_OPTIONS, TYPE_PEKERJAAN_OPTIONS, TYPE_BESI_OPTIONS, BERAT_PER_METER, PANJANG_STANDAR_BATANG } from '../types';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -16,7 +16,7 @@ interface Props {
 
 export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCancel }) => {
   const [form] = Form.useForm();
-  const [preview, setPreview] = useState({ totalPanjang: 0, totalPanjangDenganOverlap: 0, overlapPerSambungan: 0, totalBerat: 0, totalBeratWaste: 0, jumlahBatang: 0 });
+  const [preview, setPreview] = useState({ totalPanjang: 0, totalPanjangDenganOverlap: 0, overlapPerSambungan: 0, totalBerat: 0, totalBeratWaste: 0, jumlahBatang: 0, estimasiBiaya: 0 });
   const [currentShape, setCurrentShape] = useState<ShapeCode>('Lurus');
 
   React.useEffect(() => {
@@ -24,7 +24,7 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
       if (editItem) {
         form.setFieldsValue(editItem);
         setCurrentShape(editItem.shapeCode || 'Lurus');
-        recalcPreview(editItem.panjangPotongan, editItem.jumlahPotongan, editItem.jumlahElemen, editItem.diameter, editItem.wastePercent || 0, editItem.jumlahSambungan || 0);
+        recalcPreview(editItem.panjangPotongan, editItem.jumlahPotongan, editItem.jumlahElemen, editItem.diameter, editItem.wastePercent || 0, editItem.jumlahSambungan || 0, editItem.hargaPerKg || 0);
       } else {
         form.resetFields();
         form.setFieldsValue({
@@ -33,27 +33,28 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
           jumlahElemen: 1,
           jumlahPotongan: 1,
           shapeCode: 'Lurus',
-          wastePercent: 10, // Default 10%
+          wastePercent: 10,
           jumlahSambungan: 0,
+          hargaPerKg: 0,
         });
         setCurrentShape('Lurus');
-        setPreview({ totalPanjang: 0, totalPanjangDenganOverlap: 0, overlapPerSambungan: 0, totalBerat: 0, totalBeratWaste: 0, jumlahBatang: 0 });
+        setPreview({ totalPanjang: 0, totalPanjangDenganOverlap: 0, overlapPerSambungan: 0, totalBerat: 0, totalBeratWaste: 0, jumlahBatang: 0, estimasiBiaya: 0 });
       }
     }
   }, [open, editItem, form]);
 
-  const recalcPreview = (panjang: number, jmlPotongan: number, jmlElemen: number, diameter: DiameterBesi, wastePercent: number = 0, jumlahSambungan: number = 0) => {
+  const recalcPreview = (panjang: number, jmlPotongan: number, jmlElemen: number, diameter: DiameterBesi, wastePercent: number = 0, jumlahSambungan: number = 0, hargaPerKg: number = 0) => {
     if (panjang && jmlPotongan && jmlElemen && diameter) {
       const totalPanjang = panjang * jmlPotongan * jmlElemen;
-      // Overlap: 40x diameter (dalam meter) per sambungan, per elemen
-      const overlapPerSambungan = 40 * (diameter / 1000); // meter
+      const overlapPerSambungan = 40 * (diameter / 1000);
       const totalPanjangOverlap = overlapPerSambungan * jumlahSambungan * jmlElemen;
       const totalPanjangDenganOverlap = totalPanjang + totalPanjangOverlap;
       const beratPerMeter = BERAT_PER_METER[diameter] || 0;
       const totalBerat = totalPanjangDenganOverlap * beratPerMeter;
       const totalBeratWaste = totalBerat * (1 + wastePercent / 100);
       const jumlahBatang = Math.ceil(totalPanjangDenganOverlap / PANJANG_STANDAR_BATANG);
-      setPreview({ totalPanjang, totalPanjangDenganOverlap, overlapPerSambungan, totalBerat, totalBeratWaste, jumlahBatang });
+      const estimasiBiaya = hargaPerKg > 0 ? totalBeratWaste * hargaPerKg : 0;
+      setPreview({ totalPanjang, totalPanjangDenganOverlap, overlapPerSambungan, totalBerat, totalBeratWaste, jumlahBatang, estimasiBiaya });
     }
   };
 
@@ -77,7 +78,9 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
       if (shape === 'Lurus') autoPanjang = a;
       else if (shape === 'L') autoPanjang = a + b;
       else if (shape === 'U') autoPanjang = a + b + c;
+      else if (shape === 'Z') autoPanjang = a + b + c;
       else if (shape === 'Sengkang') autoPanjang = 2 * (a + b) + d;
+      else if (shape === 'Lingkaran') autoPanjang = Math.PI * a + d; // π × Diameter + kait
 
       form.setFieldsValue({ panjangPotongan: autoPanjang });
     }
@@ -101,13 +104,14 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
       (all.diameter as DiameterBesi) || 12,
       Number(all.wastePercent) || 0,
       Number(all.jumlahSambungan) || 0,
+      Number(all.hargaPerKg) || 0,
     );
   };
 
   const handleOk = async () => {
     try {
       const vals = await form.validateFields();
-      onSubmit(vals as Omit<ItemBesi, 'id' | 'totalPanjang' | 'beratPerMeter' | 'totalBerat' | 'totalBeratWaste' | 'createdAt' | 'updatedAt'>);
+      onSubmit(vals as Omit<ItemBesi, 'id' | 'totalPanjang' | 'beratPerMeter' | 'totalBerat' | 'totalBeratWaste' | 'estimasiBiaya' | 'createdAt' | 'updatedAt'>);
       form.resetFields();
     } catch {
       // validation error
@@ -203,7 +207,19 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
           <Col xs={24} sm={8}>
             <Form.Item name="shapeCode" label="Bentuk Dasar (Shape)" rules={[{ required: true }]} style={{ marginBottom: 0 }}>
               <Select id="shapeCode">
-                {SHAPE_CODE_OPTIONS.map(s => <Option key={s} value={s}>{s}</Option>)}
+                {[
+                  { value: 'Lurus',     desc: 'Batang lurus (tiang, sloof, plat)' },
+                  { value: 'L',         desc: 'Kait satu ujung (starter bar, angkur)' },
+                  { value: 'U',         desc: 'Kait dua ujung (hairpin)' },
+                  { value: 'Z',         desc: 'Batang diagonal (dowel, sambungan)' },
+                  { value: 'Sengkang',  desc: 'Sengkang persegi (kolom/balok kotak)' },
+                  { value: 'Lingkaran', desc: 'Sengkang kolom bulat / spiral' },
+                ].map(s => (
+                  <Option key={s.value} value={s.value}>
+                    <span className="font-semibold">{s.value}</span>
+                    <span className="text-slate-400 text-xs ml-2">{s.desc}</span>
+                  </Option>
+                ))}
               </Select>
             </Form.Item>
           </Col>
@@ -215,21 +231,21 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
                     <InputNumber className="w-full" step={0.1} min={0} placeholder="0.00" precision={2} />
                   </Form.Item>
                 </Col>
-                {['L', 'U', 'Sengkang'].includes(currentShape) && (
+                {['L', 'U', 'Sengkang', 'Z'].includes(currentShape) && (
                   <Col xs={12} sm={6}>
                     <Form.Item name={['shapeValues', 'b']} label="B (m)" tooltip="Panjang Sisi B" style={{ marginBottom: 0 }}>
                       <InputNumber className="w-full" step={0.1} min={0} placeholder="0.00" precision={2} />
                     </Form.Item>
                   </Col>
                 )}
-                {['U'].includes(currentShape) && (
+                {['U', 'Z'].includes(currentShape) && (
                   <Col xs={12} sm={6}>
                     <Form.Item name={['shapeValues', 'c']} label="C (m)" tooltip="Panjang Sisi C" style={{ marginBottom: 0 }}>
                       <InputNumber className="w-full" step={0.1} min={0} placeholder="0.00" precision={2} />
                     </Form.Item>
                   </Col>
                 )}
-                {['Sengkang'].includes(currentShape) && (
+                {['Sengkang', 'Lingkaran'].includes(currentShape) && (
                   <Col xs={12} sm={6}>
                     <Form.Item name={['shapeValues', 'd']} label="Kait (m)" tooltip="Panjang total kait (Contoh: 0.15)" style={{ marginBottom: 0 }}>
                       <InputNumber className="w-full" step={0.01} min={0} placeholder="0.00" precision={2} />
@@ -238,10 +254,10 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
                 )}
               </Row>
               
-              {/* Kalkulator Sengkang Extra */}
+              {/* Kalkulator Sengkang Persegi */}
               {['Sengkang'].includes(currentShape) && (
                 <div className="mt-3 pt-3 border-t border-slate-200">
-                  <p className="text-xs font-semibold text-slate-500 mb-2">Hitung Otomatis Jumlah Sengkang</p>
+                  <p className="text-xs font-semibold text-slate-500 mb-2">Hitung Otomatis Jumlah Sengkang Persegi</p>
                   <Row gutter={[8, 8]}>
                     <Col xs={12}>
                       <Form.Item name="tinggiKolom" label="Tinggi Kolom/Balok (m)" tooltip="Panjang total elemen yang akan diisi sengkang" style={{ marginBottom: 0 }}>
@@ -254,6 +270,31 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
                       </Form.Item>
                     </Col>
                   </Row>
+                </div>
+              )}
+              {/* Info Lingkaran */}
+              {['Lingkaran'].includes(currentShape) && (
+                <div className="mt-3 pt-3 border-t border-slate-200">
+                  <p className="text-xs font-semibold text-slate-500 mb-1">🔵 Sengkang Kolom Bulat / Spiral</p>
+                  <p className="text-xs text-slate-400">Isi <strong>A</strong> = Diameter lingkaran dalam meter (misal: 0.5 untuk kolom Ø500). Sistem otomatis hitung: <em>π × A + Kait</em>.</p>
+                  <Row gutter={[8, 8]} className="mt-2">
+                    <Col xs={12}>
+                      <Form.Item name="tinggiKolom" label="Tinggi Kolom (m)" tooltip="Untuk hitung otomatis jumlah sengkang spiral" style={{ marginBottom: 0 }}>
+                        <InputNumber className="w-full" step={0.1} min={0} placeholder="0.00" precision={2} />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={12}>
+                      <Form.Item name="jarakSengkang" label="Jarak Sengkang (m)" tooltip="Jarak antar sengkang spiral" style={{ marginBottom: 0 }}>
+                        <InputNumber className="w-full" step={0.01} min={0} placeholder="0.00" precision={2} />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                </div>
+              )}
+              {/* Info Z-Shape */}
+              {['Z'].includes(currentShape) && (
+                <div className="mt-2 pt-2 border-t border-slate-200">
+                  <p className="text-xs text-slate-400">⚡ Shape Z: Isi <strong>A</strong> = sisi pertama, <strong>B</strong> = sisi tengah diagonal, <strong>C</strong> = sisi akhir. Total = A + B + C.</p>
                 </div>
               )}
             </div>
@@ -303,26 +344,44 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
 
         {/* Baris 2: Faktor Koreksi */}
         <div className="p-3 rounded-lg border border-slate-200 bg-slate-50 mb-4">
-          <p className="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wider">Faktor Koreksi</p>
+          <p className="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wider">Faktor Koreksi &amp; Harga</p>
           <Row gutter={[16, 0]}>
-            <Col xs={12} sm={12}>
+            <Col xs={12} sm={8}>
               <Form.Item
                 name="wastePercent"
-                label="Waste / Susut (%)"
-                tooltip="Persentase tambahan untuk buangan besi (misal: 10 untuk 10%)"
+                label="Waste / Susut"
+                tooltip="Persentase tambahan besi untuk antisipasi buangan/sisa potong (standar lapangan 10-15%)"
                 style={{ marginBottom: 0 }}
               >
                 <InputNumber id="wastePercent" className="w-full" placeholder="10" min={0} precision={1} addonAfter="%" />
               </Form.Item>
             </Col>
-            <Col xs={12} sm={12}>
+            <Col xs={12} sm={8}>
               <Form.Item
                 name="jumlahSambungan"
-                label="Jml. Sambungan / Overlap"
-                tooltip={`Titik sambung besi per elemen. Sistem otomatis tambah 40×D meter per sambungan. Contoh: pilar 15m → isi 1`}
+                label="Jml. Sambungan (Overlap)"
+                tooltip={`Berapa kali besi disambung dalam 1 elemen? Contoh: pilar tinggi 15m butuh 2 batang = 1 sambungan. Sistem otomatis tambah 40×Diameter meter per sambungan.`}
                 style={{ marginBottom: 0 }}
               >
                 <InputNumber id="jumlahSambungan" className="w-full" placeholder="0" min={0} precision={0} addonAfter="titik" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={8}>
+              <Form.Item
+                name="hargaPerKg"
+                label="Harga Besi (Rp/kg)"
+                tooltip="Harga beli besi per kilogram dari supplier. Opsional — untuk estimasi biaya pengadaan (procurement)."
+                style={{ marginBottom: 0 }}
+              >
+                <InputNumber
+                  id="hargaPerKg"
+                  className="w-full"
+                  placeholder="0"
+                  min={0}
+                  precision={0}
+                  formatter={value => value ? `Rp ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : ''}
+                  parser={(value) => (Number((value || '').replace(/Rp\s?|\./g, '')) as 0)}
+                />
               </Form.Item>
             </Col>
           </Row>
@@ -380,6 +439,14 @@ export const FormInputBesi: React.FC<Props> = ({ open, editItem, onSubmit, onCan
                 <p className="text-xs text-slate-500 mt-1">Jml Batang (@12m)</p>
               </div>
             </div>
+            {preview.estimasiBiaya > 0 && (
+              <div className="mt-3 pt-3 border-t border-slate-200 flex items-center justify-between">
+                <span className="text-xs text-slate-500">💰 Estimasi Biaya Pengadaan:</span>
+                <span className="text-lg font-bold text-amber-600">
+                  Rp {preview.estimasiBiaya.toLocaleString('id-ID', { maximumFractionDigits: 0 })}
+                </span>
+              </div>
+            )}
           </div>
         )}
 

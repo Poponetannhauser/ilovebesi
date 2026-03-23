@@ -4,7 +4,7 @@
 
 export type DiameterBesi = 6 | 8 | 10 | 12 | 13 | 16 | 19 | 22 | 25 | 32;
 
-export type ShapeCode = "Lurus" | "L" | "U" | "Sengkang";
+export type ShapeCode = "Lurus" | "L" | "U" | "Z" | "Sengkang" | "Lingkaran";
 
 export interface ShapeValues {
 	a?: number;
@@ -48,9 +48,13 @@ export interface ItemBesi {
 	totalBerat: number; // computed: totalPanjang * beratPerMeter
 
     // Toleransi / Faktor Jaga-jaga
-    wastePercent?: number; // misalnya 10 untuk 10%
-    jumlahSambungan?: number; // jumlah titik sambungan/overlap per elemen
-    totalBeratWaste: number; // computed: totalBerat + waste
+    wastePercent?: number;
+    jumlahSambungan?: number;
+    totalBeratWaste: number;
+
+    // Harga (untuk Procurement)
+    hargaPerKg?: number; // Rp per kg
+    estimasiBiaya?: number; // computed: totalBeratWaste * hargaPerKg
 
 	// Metadata
 	catatan?: string;
@@ -106,7 +110,7 @@ export const DIAMETER_OPTIONS: DiameterBesi[] = [
 	6, 8, 10, 12, 13, 16, 19, 22, 25, 32,
 ];
 
-export const SHAPE_CODE_OPTIONS: ShapeCode[] = ["Lurus", "L", "U", "Sengkang"];
+export const SHAPE_CODE_OPTIONS: ShapeCode[] = ["Lurus", "L", "U", "Z", "Sengkang", "Lingkaran"];
 
 export const TYPE_PEKERJAAN_OPTIONS: TypePekerjaan[] = [
 	"Pondasi",

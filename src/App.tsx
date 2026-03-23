@@ -82,7 +82,7 @@ const App: React.FC = () => {
   };
 
   // ===== BESI HANDLERS =====
-  const handleAddBesi = (values: Omit<ItemBesi, 'id' | 'totalPanjang' | 'beratPerMeter' | 'totalBerat' | 'totalBeratWaste' | 'createdAt' | 'updatedAt'>) => {
+  const handleAddBesi = (values: Omit<ItemBesi, 'id' | 'totalPanjang' | 'beratPerMeter' | 'totalBerat' | 'totalBeratWaste' | 'estimasiBiaya' | 'createdAt' | 'updatedAt'>) => {
     if (!activeProyekId) return;
     if (editingItem) {
       updateItemInProyek(activeProyekId, editingItem.id, values);
